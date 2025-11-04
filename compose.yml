@@ -1,0 +1,40 @@
+---
+services:
+  traefik:
+    image: traefik:v3.4
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  api1:
+    image: api-hello1
+    depends_on:
+      traefik:
+        condition: service_started
+    build:
+      context: ./
+      args:
+        API_VERSION: v1
+    labels:
+      - "traefik.http.routers.api1.rule=Host(`api.localhost`) && PathPrefix(`/v1`)"
+      - "traefik.http.middlewares.api1-replacepathregex.replacepathregex.regex=/v1/(.*)"
+      # docker compose uses $ for interpolation. so, need escape it with $$.
+      - "traefik.http.middlewares.api1-replacepathregex.replacepathregex.replacement=/$${1}"
+
+  api2:
+    image: api-hello2
+    depends_on:
+      traefik:
+        condition: service_started
+    build:
+      context: ./
+      args:
+        API_VERSION: v2
+    labels:
+      - "traefik.http.routers.api2.rule=Host(`api.localhost`) && PathPrefix(`/v2`)"
+      - "traefik.http.middlewares.api2-replacepathregex.replacepathregex.regex=/v2/(.*)"
+      # docker compose uses $ for interpolation. so, need escape it with $$.
+      - "traefik.http.middlewares.api2-replacepathregex.replacepathregex.replacement=/$${1}"
