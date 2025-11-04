@@ -19,7 +19,7 @@ from fastapi import FastAPI \n\
 app = FastAPI(version='${API_VERSION}') \n\
 @app.get('/') \n\
 def read_root():\n\
-    return {'Hello': 'World'}\n\
+    return {'Hello': 'World from ${API_VERSION} api.'}\n\
 " > api.py
 
 EXPOSE 8000
