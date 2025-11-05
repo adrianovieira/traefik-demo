@@ -1,11 +1,11 @@
 ---
 services:
   traefik:
-    image: traefik:v3.4
+    image: traefik:v3.5
     command: --api.insecure=true --providers.docker
     ports:
-      - "80:80"
-      - "8080:8080"
+      - 80:80
+      - 8080:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -17,12 +17,14 @@ services:
     build:
       context: ./
       args:
-        API_VERSION: v1
+        API_SERVER: ${API_SERVER:-api.localhost}
+        API_ROOT_PATH: ${API1_ROOT_PATH:-v1}
+        API_VERSION: ${API1_VERSION:-v1.0}
     labels:
-      - "traefik.http.routers.api1.rule=Host(`api.localhost`) && PathPrefix(`/v1`)"
-      - "traefik.http.middlewares.api1-replacepathregex.replacepathregex.regex=/v1/(.*)"
-      # docker compose uses $ for interpolation. so, need escape it with $$.
+      - "traefik.http.middlewares.api1-replacepathregex.replacepathregex.regex=/${API1_ROOT_PATH:-v1}/(.*)$"
       - "traefik.http.middlewares.api1-replacepathregex.replacepathregex.replacement=/$${1}"
+      - "traefik.http.routers.api1.middlewares=api1-replacepathregex"
+      - "traefik.http.routers.api1.rule=Host(`${API_SERVER:-api.localhost}`) && PathPrefix(`/${API1_ROOT_PATH:-v1}`)"
 
   api2:
     image: api-hello2
@@ -32,9 +34,11 @@ services:
     build:
       context: ./
       args:
-        API_VERSION: v2
+        API_SERVER: ${API_SERVER:-api.localhost}
+        API_ROOT_PATH: ${API2_ROOT_PATH:-v2}
+        API_VERSION: ${API2_VERSION:-v2.0}
     labels:
-      - "traefik.http.routers.api2.rule=Host(`api.localhost`) && PathPrefix(`/v2`)"
-      - "traefik.http.middlewares.api2-replacepathregex.replacepathregex.regex=/v2/(.*)"
-      # docker compose uses $ for interpolation. so, need escape it with $$.
+      - "traefik.http.middlewares.api2-replacepathregex.replacepathregex.regex=/${API2_ROOT_PATH:-v2}/(.*)$"
       - "traefik.http.middlewares.api2-replacepathregex.replacepathregex.replacement=/$${1}"
+      - "traefik.http.routers.api2.middlewares=api2-replacepathregex"
+      - "traefik.http.routers.api2.rule=Host(`${API_SERVER:-api.localhost}`) && PathPrefix(`/${API2_ROOT_PATH:-v2}`)"
