@@ -13,10 +13,16 @@ ENV PATH="/home/worker/.local/bin:${PATH}"
 RUN pip install "fastapi[standard]"
 
 ARG API_VERSION
+ARG API_ROOT_PATH
+ARG API_SERVER
 
 RUN echo -e "\
 from fastapi import FastAPI \n\
-app = FastAPI(version='${API_VERSION}') \n\
+app = FastAPI(\
+ version='${API_VERSION}',\
+ servers=[{'url': 'http://${API_SERVER}/${API_ROOT_PATH}'}],\
+ root_path='/${API_ROOT_PATH}', root_path_in_servers=False\
+ ) \n\
 @app.get('/') \n\
 def read_root():\n\
     return {'Hello': 'World from ${API_VERSION} api.'}\n\
